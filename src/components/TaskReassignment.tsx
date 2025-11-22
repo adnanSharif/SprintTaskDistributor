@@ -208,7 +208,7 @@ export default function TaskReassignment({ schedules, developers, tasks, onReass
               </div>
               {selectedWorkType === 'codeReview' && getAvailableDevelopers().length === 0 && (
                 <div style={{ padding: 16, background: '#fef3c7', borderRadius: 6, color: '#92400e', fontSize: 13 }}>
-                  ⚠️ No other reviewers available. Only developers marked as "Can Review" can perform code reviews.
+                  ⚠️ No other reviewers available. Only developers marked as &quot;Can Review&quot; can perform code reviews.
                 </div>
               )}
             </div>

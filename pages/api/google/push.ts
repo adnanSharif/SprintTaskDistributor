@@ -2,10 +2,21 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { google } from 'googleapis';
 import { getToken } from '../../../src/server/tokenStore';
 
+interface SheetRow {
+  Task?: string;
+  Estimate?: string | number;
+  Assignee?: string;
+}
+
+function isSheetRowArray(value: unknown): value is SheetRow[] {
+  return Array.isArray(value) && value.every(row => typeof row === 'object' && row !== null);
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse){
   if(req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
-  const rows = req.body.rows as any[];
-  if(!rows || !Array.isArray(rows)) return res.status(400).json({ error: 'Missing rows' });
+  const rowsInput = req.body?.rows;
+  if(!isSheetRowArray(rowsInput)) return res.status(400).json({ error: 'Missing rows' });
+  const rows = rowsInput;
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -21,11 +32,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try{
     const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
-    const values = rows.map(r => [r.Task || '', r.Estimate || '', r.Assignee || '']);
+    const values = rows.map(r => [r.Task ?? '', r.Estimate ?? '', r.Assignee ?? '']);
     // write to sheet starting at A1; this is a simple append/overwrite flow
     await sheets.spreadsheets.values.append({ spreadsheetId, range: 'Sheet1!A1', valueInputOption: 'RAW', requestBody: { values } });
     res.status(200).json({ ok: true });
-  }catch(err:any){
-    res.status(500).json({ error: err.message || String(err) });
+  }catch(err){
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 }

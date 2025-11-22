@@ -3,8 +3,21 @@
  * Keep this module small and well-tested so Copilot can extend it.
  */
 
-export type Member = { id?: string; name?: string; dailyCapacity?: number };
-export type Task = { Summary?: string; estimate?: number; 'Original Estimate'?: number } & Record<string, any>;
+import type { Task as SprintTask, Developer } from '../types/index.d';
+
+type LegacyTaskFields = {
+  Summary?: string;
+  summary?: string;
+  title?: string;
+  estimate?: number;
+  est?: number;
+  Estimate?: number;
+  'Original Estimate'?: number;
+  'Issue Type'?: string;
+};
+
+export type Member = Pick<Developer, 'id' | 'name' | 'dailyCapacity'>;
+export type Task = SprintTask & LegacyTaskFields;
 
 export function toEstimate(t: Task){
   const raw = t['Original Estimate'] ?? t.estimate ?? t.Estimate ?? t.est ?? 0;
@@ -17,7 +30,8 @@ export function scoreRisk(task: Task){
   const est = toEstimate(task);
   let score = Math.min(10, Math.round(est / 2));
   if(!task['Summary'] && !task.summary && !task.title) score += 3;
-  if(task['Issue Type'] && String(task['Issue Type']).toLowerCase().includes('bug')) score += 2;
+  const issueType = task['Issue Type'];
+  if(typeof issueType === 'string' && issueType.toLowerCase().includes('bug')) score += 2;
   return Math.min(10, score);
 }
 

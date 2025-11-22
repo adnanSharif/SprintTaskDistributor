@@ -1,31 +1,56 @@
 import Papa from 'papaparse';
 import { Task, Developer, WorkBreakdown } from '../types/index.d';
 
-export function parseCSV(text: string) {
-  return Papa.parse(text, { header: true, skipEmptyLines: true }).data as any[];
+export type CsvSerializableValue = string | number | boolean | null | undefined;
+export type CsvSerializableRow = Record<string, CsvSerializableValue>;
+type CsvRow = Record<string, string | undefined>;
+
+export function parseCSV(text: string): CsvRow[] {
+  const result = Papa.parse<CsvRow>(text, { header: true, skipEmptyLines: true });
+  return result.data;
+}
+
+function normalizePriority(value?: string): Task['priority'] {
+  if (!value) return 'Medium';
+  const normalized = value.trim().toLowerCase();
+  switch (normalized) {
+    case 'critical':
+      return 'Critical';
+    case 'high':
+      return 'High';
+    case 'low':
+      return 'Low';
+    default:
+      return 'Medium';
+  }
+}
+
+function toNumber(value?: string): number {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 export function parseTasksCSV(text: string): Task[] {
   const rows = parseCSV(text);
-  return rows.map((row: any, idx: number) => {
+  return rows.map((row, idx) => {
     const work: WorkBreakdown = {
-      research: Number(row['Research Hours'] || row['research'] || 0),
-      development: Number(row['Development Hours'] || row['development'] || 0),
-      codeReview: Number(row['Code Review Hours'] || row['codeReview'] || 0),
-      reviewFeedback: Number(row['Review Feedback Hours'] || row['reviewFeedback'] || 0),
-      defectCorrection: Number(row['Defect Correction Hours'] || row['defectCorrection'] || 0),
-      qa: Number(row['QA Hours'] || row['qa'] || 0)
+      research: toNumber(row['Research Hours'] || row['research']),
+      development: toNumber(row['Development Hours'] || row['development']),
+      codeReview: toNumber(row['Code Review Hours'] || row['codeReview']),
+      reviewFeedback: toNumber(row['Review Feedback Hours'] || row['reviewFeedback']),
+      defectCorrection: toNumber(row['Defect Correction Hours'] || row['defectCorrection']),
+      qa: toNumber(row['QA Hours'] || row['qa'])
     };
 
-    const dependencies = row['Dependencies'] || row['dependencies'] || '';
-    const depArray = dependencies
-      ? dependencies.split(';').map((d: string) => d.trim()).filter(Boolean)
+    const dependenciesValue = row['Dependencies'] || row['dependencies'] || '';
+    const depArray = typeof dependenciesValue === 'string'
+      ? dependenciesValue.split(';').map(d => d.trim()).filter(Boolean)
       : [];
 
     return {
       id: row['Issue key'] || row['id'] || row['ID'] || `TASK-${Date.now()}-${idx}`,
       summary: row['Summary'] || row['summary'] || 'Untitled Task',
-      priority: (row['Priority'] || row['priority'] || 'Medium') as any,
+      priority: normalizePriority(row['Priority'] || row['priority']),
       work,
       dependencies: depArray,
       status: 'Not Started'
@@ -35,16 +60,26 @@ export function parseTasksCSV(text: string): Task[] {
 
 export function parseTeamCSV(text: string): Developer[] {
   const rows = parseCSV(text);
-  return rows.map((row: any, idx: number) => ({
-    id: row['ID'] || row['id'] || `dev-${Date.now()}-${idx}`,
-    name: row['Name'] || row['name'] || row['Display Name'] || 'Unnamed',
-    role: 'Dev' as const,
-    dailyCapacity: Number(row['Daily Capacity (hours)'] || row['dailyCapacity'] || row['Capacity'] || 8),
-    canReview: row['Can Review'] ? row['Can Review'].toLowerCase() === 'true' || row['Can Review'] === '1' : true
-  }));
+  return rows.map((row, idx) => {
+    const capacityRaw = row['Daily Capacity (hours)'] || row['dailyCapacity'] || row['Capacity'] || '8';
+    const parsedCapacity = Number(capacityRaw);
+    const dailyCapacity = Number.isFinite(parsedCapacity) ? parsedCapacity : 8;
+    const canReviewValue = row['Can Review'] || row['canReview'];
+    const canReview = typeof canReviewValue === 'string'
+      ? ['true', '1', 'yes', 'y'].includes(canReviewValue.toLowerCase())
+      : true;
+
+    return {
+      id: row['ID'] || row['id'] || `dev-${Date.now()}-${idx}`,
+      name: row['Name'] || row['name'] || row['Display Name'] || 'Unnamed',
+      role: 'Dev' as const,
+      dailyCapacity,
+      canReview
+    };
+  });
 }
 
-export function exportToCSV(rows: any[], filename = 'plan.csv') {
+export function exportToCSV(rows: CsvSerializableRow[], filename = 'plan.csv') {
   // Use PapaParse to generate CSV (safer than xlsx for simple CSV export)
   const csv = Papa.unparse(rows);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -57,7 +92,7 @@ export function exportToCSV(rows: any[], filename = 'plan.csv') {
 }
 
 export function exportTasksToCSV(tasks: Task[], filename = 'sprint_plan.csv') {
-  const rows = tasks.map(task => ({
+  const rows: CsvSerializableRow[] = tasks.map(task => ({
     'Task ID': task.id,
     'Summary': task.summary,
     'Priority': task.priority,

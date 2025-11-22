@@ -179,7 +179,6 @@ export default function DeveloperTimeline({ schedules, developers, sprintStart, 
                   {getDatesInRange.map((date, idx) => {
                     const dateStr = formatDate(date);
                     const daySchedule = devSchedule.dailySchedule.find(d => d.date === dateStr);
-                    const totalDayCapacity = daySchedule ? daySchedule.totalHours + daySchedule.idleHours : 0;
 
                     return (
                       <div

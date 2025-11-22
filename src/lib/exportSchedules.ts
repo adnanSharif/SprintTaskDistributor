@@ -1,12 +1,13 @@
 import Papa from 'papaparse';
-import { DeveloperScheduleSummary, Developer } from '../types/index.d';
+import { DeveloperScheduleSummary } from '../types/index.d';
+import { CsvSerializableRow } from './csv';
 
 // Export all developers in one file with comprehensive details
 export function exportAllDevelopersSchedule(
   schedules: DeveloperScheduleSummary[],
   filename: string = 'all_developers_schedule.csv'
 ) {
-  const rows: any[] = [];
+  const rows: CsvSerializableRow[] = [];
 
   schedules.forEach(devSchedule => {
     devSchedule.dailySchedule.forEach(daySchedule => {
@@ -48,7 +49,7 @@ export function exportTaskFocusedSchedule(
   schedules: DeveloperScheduleSummary[],
   filename: string = 'task_focused_schedule.csv'
 ) {
-  const rows: any[] = [];
+  const rows: CsvSerializableRow[] = [];
 
   schedules.forEach(devSchedule => {
     devSchedule.taskAssignments.forEach(task => {
@@ -74,7 +75,7 @@ export function exportIndividualDeveloperSchedules(
   sprintDate: string = 'sprint'
 ) {
   schedules.forEach(devSchedule => {
-    const rows: any[] = [];
+    const rows: CsvSerializableRow[] = [];
 
     // Add summary row
     rows.push({

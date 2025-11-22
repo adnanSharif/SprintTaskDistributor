@@ -22,6 +22,11 @@ import DeveloperTimeline from '../src/components/DeveloperTimeline';
 import DailyCalendarGrid from '../src/components/DailyCalendarGrid';
 import TaskReassignment from '../src/components/TaskReassignment';
 
+interface CsvImportPayload {
+  tasks?: Task[];
+  team?: Developer[];
+}
+
 export default function Home() {
   // Get today's date for defaults
   const today = new Date().toISOString().split('T')[0];
@@ -45,22 +50,39 @@ export default function Home() {
 
   // Auto-schedule when moving to timeline view
   useEffect(() => {
-    if (step === 4 && hasDevelopers && hasTasks) {
-      const result = scheduleTasksWithDependencies(tasks, developers, sprintConfig);
-      setScheduleResult(result);
-      setDeveloperSchedules(result.developerSchedules || []);
-      setTasks(result.tasks); // Update with scheduled dates
-    }
-  }, [step]);
+    if (step !== 4) return;
+    if (!developers.length || !tasks.length) return;
 
-  const handleCSVImport = (data: { tasks?: any[]; team?: any[] }) => {
-    if (data.tasks && data.tasks.length > 0) {
-      setTasks(prev => [...prev, ...data.tasks!]);
+    const result = scheduleTasksWithDependencies(tasks, developers, sprintConfig);
+    setScheduleResult(result);
+    setDeveloperSchedules(result.developerSchedules || []);
+
+    const hasTaskChanges = result.tasks.some((scheduledTask, idx) => {
+      const currentTask = tasks[idx];
+      if (!currentTask) return true;
+      return (
+        currentTask.scheduledStart !== scheduledTask.scheduledStart ||
+        currentTask.scheduledEnd !== scheduledTask.scheduledEnd ||
+        currentTask.assignedTo !== scheduledTask.assignedTo
+      );
+    });
+
+    if (hasTaskChanges) {
+      setTasks(result.tasks);
     }
-    if (data.team && data.team.length > 0) {
+  }, [step, developers, tasks, sprintConfig]);
+
+  const handleCSVImport = (data: CsvImportPayload) => {
+    const importedTasks = data.tasks;
+    const importedTeam = data.team;
+
+    if (importedTasks && importedTasks.length > 0) {
+      setTasks(prev => [...prev, ...importedTasks]);
+    }
+    if (importedTeam && importedTeam.length > 0) {
       setDevelopers(prev => {
         const merged = [...prev];
-        data.team!.forEach((newDev: Developer) => {
+        importedTeam.forEach((newDev: Developer) => {
           const exists = merged.some(d => d.name === newDev.name);
           if (!exists) {
             merged.push(newDev);
@@ -538,8 +560,6 @@ export default function Home() {
                 <div className="card" style={{ background: 'rgba(255,255,255,0.98)', marginBottom: 24 }}>
                   <DailyCalendarGrid
                     schedules={developerSchedules}
-                    sprintStart={sprintConfig.startDate}
-                    sprintEnd={sprintConfig.endDate}
                   />
                 </div>
 

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Task, Developer } from '../types/index.d';
-import { ScheduleResult } from '../lib/scheduler';
+import type { Developer } from '../types/index.d';
+import type { ScheduleResult } from '../lib/schedulerEnhanced';
 
 interface Props {
   scheduleResult: ScheduleResult;
@@ -24,10 +24,6 @@ export default function GanttTimeline({ scheduleResult, developers, sprintStart,
     }
     return dates;
   }, [sprintStart, sprintEnd]);
-
-  const formatDate = (date: Date) => {
-    return date.toISOString().split('T')[0];
-  };
 
   const getTaskColor = (priority: string) => {
     switch (priority) {
@@ -116,7 +112,7 @@ export default function GanttTimeline({ scheduleResult, developers, sprintStart,
             ❌ Tasks Not Scheduled ({unscheduledTasks.length})
           </div>
           <div style={{ fontSize: 13, color: '#991b1b' }}>
-            These tasks won't be completed within the sprint:
+            These tasks won&rsquo;t be completed within the sprint:
             {unscheduledTasks.slice(0, 3).map(task => (
               <div key={task.id} style={{ marginTop: 4 }}>• {task.id}: {task.summary}</div>
             ))}

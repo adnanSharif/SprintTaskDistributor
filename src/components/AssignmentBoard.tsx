@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { calculateAssignments, toEstimate } from '../lib/assign';
-import { 
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { calculateAssignments, toEstimate, type Task as AssignableTask } from '../lib/assign';
+import type { Developer } from '../types/index.d';
+import {
   DndContext, 
   DragEndEvent, 
   DragOverlay, 
@@ -16,9 +17,26 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import useLocalStorage from '../hooks/useLocalStorage';
-import { exportToCSV } from '../lib/csv';
+import { exportToCSV, type CsvSerializableRow } from '../lib/csv';
 
-type Props = { team:any[]; tasks:any[]; setTasks:(t:any[])=>void };
+interface AssignmentBoardProps {
+  team: Developer[];
+  tasks: AssignableTask[];
+}
+
+interface SortableTaskItemProps {
+  id: string;
+  task: AssignableTask;
+  assigned: Record<string, number | null | undefined>;
+  team: Developer[];
+  taskKey: string;
+  onManualAssign: ((taskKeyStr: string, memberIndex: number | null) => void) | null;
+}
+
+type LegacyIdentifierFields = {
+  ['Issue key']?: string;
+  key?: string;
+};
 
 // Droppable container component
 function DroppableContainer({ id, children }: { id: string; children: React.ReactNode }) {
@@ -41,7 +59,7 @@ function DroppableContainer({ id, children }: { id: string; children: React.Reac
 }
 
 // Sortable task item component
-function SortableTaskItem({ id, task, assigned, team, taskKey, onManualAssign }: any) {
+function SortableTaskItem({ id, task, assigned, team, taskKey, onManualAssign }: SortableTaskItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   
   const style = {
@@ -70,7 +88,7 @@ function SortableTaskItem({ id, task, assigned, team, taskKey, onManualAssign }:
             onPointerDown={(e) => e.stopPropagation()}
           >
             <option value="">(unassigned)</option>
-            {team.map((tm: any, i2: number)=> <option key={i2} value={i2}>{tm.name}</option>)}
+            {team.map((tm, i2)=> <option key={tm.id || i2} value={i2}>{tm.name}</option>)}
           </select>
         </div>
       )}
@@ -78,11 +96,11 @@ function SortableTaskItem({ id, task, assigned, team, taskKey, onManualAssign }:
   );
 }
 
-export default function AssignmentBoard({ team, tasks, setTasks }: Props){
+export default function AssignmentBoard({ team, tasks }: AssignmentBoardProps){
   const [activeId, setActiveId] = useState<string | null>(null);
   const [sprintDays, setSprintDays] = useState(10); // Default sprint length
   // assigned: map of taskKey -> memberIndex | null (null means backlog)
-  const [assigned, setAssigned] = useLocalStorage<Record<string, number|null>>('std.assignments', {});
+  const [assigned, setAssigned] = useLocalStorage<Record<string, number | null>>('std.assignments', {});
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -93,11 +111,15 @@ export default function AssignmentBoard({ team, tasks, setTasks }: Props){
   );
 
   // Utility to create stable task key
-  const taskKey = (task:any, idx:number) => (task.id ?? task['Issue key'] ?? task.key ?? `t-${idx}`);
+  const taskKey = useCallback((task: AssignableTask, idx: number) => {
+    const legacyFields = task as LegacyIdentifierFields;
+    return task.id ?? legacyFields['Issue key'] ?? legacyFields.key ?? `t-${idx}`;
+  }, []);
 
   // initialize suggestions if no assignments exist
   useEffect(()=>{
-    if(Object.keys(assigned || {}).length === 0 && tasks.length>0 && team.length>0){
+    if(!assigned || Object.keys(assigned).length === 0) {
+      if(tasks.length === 0 || team.length === 0) return;
       const suggestions = calculateAssignments(team, tasks, sprintDays);
       const map: Record<string, number|null> = {};
       suggestions.forEach((s,i)=>{
@@ -107,19 +129,24 @@ export default function AssignmentBoard({ team, tasks, setTasks }: Props){
       });
       setAssigned(map);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasks, team, sprintDays]);
+  }, [assigned, setAssigned, tasks, team, sprintDays, taskKey]);
 
   // Build lists for DnD rendering
-  const backlogList = useMemo(()=>{
-    return tasks.map((t,i)=>({ key: taskKey(t,i), task: t, index: i })).filter(x=> (assigned[x.key] ?? null) === null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasks, assigned]);
+  const backlogList = useMemo(() =>
+    tasks
+      .map((t, i) => ({ key: taskKey(t, i), task: t, index: i }))
+      .filter(item => (assigned?.[item.key] ?? null) === null)
+  , [assigned, taskKey, tasks]);
 
-  const membersWithTasks = useMemo(()=>{
-    return team.map((m,mi)=>({ member: m, index: mi, tasks: tasks.map((t,i)=>({ key: taskKey(t,i), task:t, index:i })).filter(x=> assigned[x.key]===mi) }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [team, tasks, assigned]);
+  const membersWithTasks = useMemo(() =>
+    team.map((member, mi) => ({
+      member,
+      index: mi,
+      tasks: tasks
+        .map((t, i) => ({ key: taskKey(t, i), task: t, index: i }))
+        .filter(item => assigned?.[item.key] === mi)
+    }))
+  , [assigned, taskKey, tasks, team]);
 
   const onDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -152,15 +179,18 @@ export default function AssignmentBoard({ team, tasks, setTasks }: Props){
     setAssigned(newAssigned);
   }
 
-  const buildPlanRows = () => {
-    const rows: any[] = [];
-    tasks.forEach((t,i)=>{
-      const key = taskKey(t,i);
-      const assignee = assigned[key] != null ? team[assigned[key] as number]?.name : '';
-      rows.push({ Task: t.Summary || t.summary || t.title || `Task ${i+1}`, Estimate: toEstimate(t as any), Assignee: assignee });
+  const buildPlanRows = (): CsvSerializableRow[] => {
+    return tasks.map((t, i) => {
+      const key = taskKey(t, i);
+      const assignmentIndex = assigned?.[key];
+      const assigneeName = assignmentIndex != null ? team[assignmentIndex]?.name : '';
+      return {
+        Task: t.Summary || t.summary || t.title || `Task ${i + 1}`,
+        Estimate: toEstimate(t),
+        Assignee: assigneeName ?? ''
+      };
     });
-    return rows;
-  }
+  };
 
   const handleExportCSV = () => {
     const rows = buildPlanRows();
@@ -174,8 +204,9 @@ export default function AssignmentBoard({ team, tasks, setTasks }: Props){
       const j = await res.json();
       if(!res.ok) throw new Error(j.error || 'push failed');
       alert('Pushed plan to Google Sheets');
-    }catch(err:any){
-      alert('Sheets push failed: ' + (err.message||err));
+    }catch(err){
+      const message = err instanceof Error ? err.message : String(err);
+      alert(`Sheets push failed: ${message}`);
     }
   }
 
@@ -229,11 +260,11 @@ export default function AssignmentBoard({ team, tasks, setTasks }: Props){
                 </h4>
                 <DroppableContainer id={`member-${mi}`}>
                   <SortableContext 
-                    items={membersWithTasks[mi]?.tasks.map((x: any) => x.key) || []} 
+                    items={membersWithTasks[mi]?.tasks.map(x => x.key) || []}
                     strategy={verticalListSortingStrategy}
                   >
                     {membersWithTasks[mi]?.tasks.length === 0 && <div style={{color:'var(--muted)',padding:12,textAlign:'center'}}>No tasks assigned</div>}
-                    {membersWithTasks[mi]?.tasks.map((it: any)=> (
+                    {membersWithTasks[mi]?.tasks.map(it=> (
                       <SortableTaskItem
                         key={it.key}
                         id={it.key}

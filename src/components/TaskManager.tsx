@@ -3,6 +3,13 @@
 import React, { useState } from 'react';
 import { Task, WorkBreakdown } from '../types/index.d';
 
+type TaskDraft = Partial<Omit<Task, 'work' | 'priority' | 'dependencies' | 'status'>> & {
+  work: WorkBreakdown;
+  priority?: Task['priority'];
+  dependencies?: string[];
+  status?: Task['status'];
+};
+
 interface Props {
   tasks: Task[];
   onChange: (tasks: Task[]) => void;
@@ -10,8 +17,8 @@ interface Props {
 
 export default function TaskManager({ tasks, onChange }: Props) {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [newTask, setNewTask] = useState<Partial<Task>>({
+  const [editingTask, setEditingTask] = useState<TaskDraft | null>(null);
+  const [newTask, setNewTask] = useState<TaskDraft>({
     summary: '',
     priority: 'Medium',
     work: {
@@ -29,8 +36,8 @@ export default function TaskManager({ tasks, onChange }: Props) {
     const task: Task = {
       id: `TASK-${Date.now()}`,
       summary: newTask.summary || 'Untitled Task',
-      priority: newTask.priority as any || 'Medium',
-      work: newTask.work as WorkBreakdown,
+      priority: newTask.priority ?? 'Medium',
+      work: newTask.work,
       dependencies: newTask.dependencies || [],
       status: 'Not Started'
     };
@@ -41,18 +48,19 @@ export default function TaskManager({ tasks, onChange }: Props) {
 
   const updateTask = () => {
     if (!editingTask) return;
-    onChange(tasks.map(t => t.id === editingTask.id ? editingTask : t));
+    if (!editingTask.id) return;
+    onChange(tasks.map(t => (t.id === editingTask.id ? { ...t, ...editingTask } as Task : t)));
     setEditingTask(null);
   };
 
   const deleteTask = (id: string) => {
     if (confirm('Delete this task?')) {
-      onChange(tasks.filter(t => t.id !== id));
-      // Remove from dependencies
-      onChange(tasks.map(t => ({
+      const withoutTask = tasks.filter(t => t.id !== id);
+      const cleaned = withoutTask.map(t => ({
         ...t,
         dependencies: t.dependencies?.filter(dep => dep !== id)
-      })));
+      }));
+      onChange(cleaned);
     }
   };
 
@@ -77,7 +85,7 @@ export default function TaskManager({ tasks, onChange }: Props) {
            (work.reviewFeedback || 0) + (work.defectCorrection || 0) + (work.qa || 0);
   };
 
-  const TaskForm = ({ task, setTask, onSave, onCancel }: any) => {
+  const TaskForm = ({ task, setTask, onSave, onCancel }: { task: TaskDraft; setTask: (draft: TaskDraft) => void; onSave: () => void; onCancel: () => void }) => {
     const toggleDependency = (depId: string) => {
       const deps = task.dependencies || [];
       const newDeps = deps.includes(depId)
@@ -91,7 +99,7 @@ export default function TaskManager({ tasks, onChange }: Props) {
         <div>
           <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Task Summary</label>
           <input
-            value={task.summary}
+            value={task.summary ?? ''}
             onChange={e => setTask({ ...task, summary: e.target.value })}
             placeholder="e.g., Implement user authentication"
             style={{ width: '100%' }}
@@ -101,8 +109,8 @@ export default function TaskManager({ tasks, onChange }: Props) {
         <div>
           <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Priority</label>
           <select
-            value={task.priority}
-            onChange={e => setTask({ ...task, priority: e.target.value })}
+            value={task.priority ?? 'Medium'}
+            onChange={e => setTask({ ...task, priority: e.target.value as Task['priority'] })}
             style={{ width: '100%', padding: 10 }}
           >
             <option value="Critical">Critical</option>
@@ -320,7 +328,7 @@ export default function TaskManager({ tasks, onChange }: Props) {
             <h3 style={{ marginBottom: 20, color: 'var(--primary)' }}>➕ Add New Task</h3>
             <TaskForm
               task={newTask}
-              setTask={setNewTask}
+              setTask={draft => setNewTask(draft)}
               onSave={addTask}
               onCancel={() => { setShowAddModal(false); resetNewTask(); }}
             />
@@ -335,7 +343,7 @@ export default function TaskManager({ tasks, onChange }: Props) {
             <h3 style={{ marginBottom: 20, color: 'var(--primary)' }}>✏️ Edit Task</h3>
             <TaskForm
               task={editingTask}
-              setTask={setEditingTask}
+              setTask={draft => setEditingTask(draft)}
               onSave={updateTask}
               onCancel={() => setEditingTask(null)}
             />

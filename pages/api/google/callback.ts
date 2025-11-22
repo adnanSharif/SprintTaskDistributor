@@ -16,7 +16,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Save tokens to dev token store for later use
     saveToken('default', tokens);
     res.status(200).send('Authentication successful — you can return to the app. Tokens saved (dev store).');
-  }catch(err:any){
-    res.status(500).send('Token exchange failed: ' + (err.message||err));
+  }catch(err){
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).send(`Token exchange failed: ${message}`);
   }
 }

@@ -5,11 +5,9 @@ import { DeveloperScheduleSummary } from '../types/index.d';
 
 interface Props {
   schedules: DeveloperScheduleSummary[];
-  sprintStart: string;
-  sprintEnd: string;
 }
 
-export default function DailyCalendarGrid({ schedules, sprintStart, sprintEnd }: Props) {
+export default function DailyCalendarGrid({ schedules }: Props) {
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
 
   const toggleDay = (date: string) => {

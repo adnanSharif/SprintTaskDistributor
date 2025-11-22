@@ -35,7 +35,7 @@ export default function TeamRoster({ team, setTeam }: { team: Developer[]; setTe
     setTeam(stored || []);
   }, [stored, setTeam]);
 
-  const onChange = useCallback((idx: number, key: keyof Developer, value: any) => {
+  const onChange = useCallback(<K extends keyof Developer>(idx: number, key: K, value: Developer[K]) => {
     setStored(prev => {
       const copy = [...(prev || [])];
       copy[idx] = { ...copy[idx], [key]: value };
@@ -75,7 +75,7 @@ export default function TeamRoster({ team, setTeam }: { team: Developer[]; setTe
       <div style={{ maxHeight: 400, overflowY: 'auto', marginBottom: 16 }}>
         {(!stored || stored.length === 0) && (
           <div style={{ textAlign: 'center', padding: '32px 16px', background: '#f9fafb', borderRadius: 8, marginBottom: 16 }}>
-            <p style={{ color: 'var(--muted)', marginBottom: 0 }}>No team members yet. Click "Add Member" or import CSV.</p>
+            <p style={{ color: 'var(--muted)', marginBottom: 0 }}>No team members yet. Click &quot;Add Member&quot; or import CSV.</p>
           </div>
         )}
         {(stored || []).map((m, i) => (
@@ -149,7 +149,7 @@ export default function TeamRoster({ team, setTeam }: { team: Developer[]; setTe
                   <span style={{ fontWeight: 500 }}>Can perform code reviews</span>
                 </label>
                 <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>
-                  Only experienced developers should review others' code
+                  Only experienced developers should review others&rsquo; code
                 </p>
               </div>
             </div>

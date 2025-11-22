@@ -66,10 +66,11 @@ function createWorkItems(tasks: Task[]): WorkItem[] {
           workItemDeps.push(`${task.id}:${workOrder[workTypeIndex - 1]}`);
         }
 
+        const typedWorkType = workType as WorkItem['type'];
         workItems.push({
           taskId: task.id,
           taskSummary: task.summary,
-          type: workType as any,
+          type: typedWorkType,
           hours,
           priority,
           dependencies: workItemDeps,
@@ -104,7 +105,7 @@ function createWorkItems(tasks: Task[]): WorkItem[] {
   return workItems;
 }
 
-function sortWorkItems(workItems: WorkItem[], tasks: Task[]): WorkItem[] {
+function sortWorkItems(workItems: WorkItem[]): WorkItem[] {
   const taskCompletionOrder = new Map<string, number>();
   const workItemKey = (item: WorkItem) => `${item.taskId}:${item.type}`;
   let order = 0;
@@ -162,7 +163,6 @@ export function scheduleTasksWithDependencies(
 ): ScheduleResult {
   const warnings: string[] = [];
   const schedule: ScheduledWorkItem[] = [];
-  const unscheduledTasks: Task[] = [];
 
   if (developers.length === 0) {
     warnings.push('No developers available');
@@ -170,7 +170,7 @@ export function scheduleTasksWithDependencies(
   }
 
   const workItems = createWorkItems(tasks);
-  const sortedWorkItems = sortWorkItems(workItems, tasks);
+  const sortedWorkItems = sortWorkItems(workItems);
 
   // Track developer availability and last work type
   const devAvailability = new Map<string, Map<string, number>>();
@@ -239,7 +239,7 @@ export function scheduleTasksWithDependencies(
 
     // Try to assign to a developer
     let remainingHours = workItem.hours;
-    let currentDate = new Date(earliestStart);
+    const currentDate = new Date(earliestStart);
     let assigned = false;
     let assignedDev: string | null = null;
     const workStartDate = new Date(currentDate);

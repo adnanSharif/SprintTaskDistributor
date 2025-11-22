@@ -1,9 +1,13 @@
 'use client';
 
 import React from 'react';
-import { scoreRisk } from '../lib/assign';
+import { scoreRisk, type Task as AssignableTask } from '../lib/assign';
 
-export default function RiskMatrix({ tasks } : { tasks:any[] }){
+interface RiskMatrixProps {
+  tasks: AssignableTask[];
+}
+
+export default function RiskMatrix({ tasks }: RiskMatrixProps){
   const scored = tasks.map(t => ({ t, score: scoreRisk(t) }));
 
   return (

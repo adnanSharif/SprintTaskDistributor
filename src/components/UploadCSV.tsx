@@ -2,8 +2,10 @@
 
 import React, { useRef } from 'react';
 import { parseTasksCSV, parseTeamCSV } from '../lib/csv';
+import type { Task, Developer } from '../types/index.d';
 
-type Props = { onImport: (data: { tasks?: any[]; team?: any[] }) => void };
+type ImportPayload = { tasks?: Task[]; team?: Developer[] };
+type Props = { onImport: (data: ImportPayload) => void };
 
 // CSV importer with improved format detection
 export default function UploadCSV({ onImport }: Props) {

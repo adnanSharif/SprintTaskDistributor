@@ -6,7 +6,7 @@ export default function useLocalStorage<T>(key: string, initial: T){
       if(typeof window === 'undefined') return initial;
       const raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) as T : initial;
-    }catch(e){
+    }catch{
       return initial;
     }
   });
@@ -15,7 +15,7 @@ export default function useLocalStorage<T>(key: string, initial: T){
     try{
       if(typeof window === 'undefined') return;
       localStorage.setItem(key, JSON.stringify(state));
-    }catch(e){/* ignore */}
+    }catch{/* ignore */}
   }, [key, state]);
 
   return [state, setState] as const;
