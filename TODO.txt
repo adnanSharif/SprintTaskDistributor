@@ -1,0 +1,342 @@
+===============================================
+SPRINT TASK DISTRIBUTOR - IMPLEMENTATION ROADMAP
+===============================================
+
+CURRENT STATUS: ✅ Core MVP Complete
+- Basic drag-and-drop task assignment ✅
+- CSV import/export ✅
+- Team roster management ✅
+- Assignment algorithm ✅
+- Risk scoring ✅
+- Unit tests ✅
+- Build & deployment ready ✅
+
+===============================================
+MISSING FEATURES / TO-DO
+===============================================
+
+🔴 HIGH PRIORITY (Core Functionality Gaps)
+==========================================
+
+1. GOOGLE SHEETS INTEGRATION (Partially Implemented)
+   Status: OAuth flow exists but needs configuration
+   Files: pages/api/google/*.ts
+   Missing:
+   - [ ] Create .env file with actual Google OAuth credentials
+   - [ ] Test OAuth2 flow end-to-end
+   - [ ] Add GOOGLE_SPREADSHEET_ID to .env.sample
+   - [ ] Handle token refresh logic
+   - [ ] Add error handling for expired tokens
+   - [ ] Test push.ts API with real Google Sheets
+   
+   Steps to Complete:
+   a) Go to https://console.cloud.google.com/
+   b) Create OAuth 2.0 credentials
+   c) Copy .env.sample to .env and fill in credentials
+   d) Test /api/google/auth → callback flow
+   e) Test "Push to Google Sheets" button with real spreadsheet
+
+2. SKILL-BASED TASK MATCHING
+   Status: Not implemented
+   Location: src/lib/assign.ts needs enhancement
+   Missing:
+   - [ ] Add 'skills' field to team member type
+   - [ ] Add 'requiredSkills' field to task type
+   - [ ] Implement skill matching algorithm in calculateAssignments()
+   - [ ] Add skill mismatch penalty to scoreRisk()
+   - [ ] UI to input/edit skills in TeamRoster component
+   - [ ] Display skill match % in AssignmentBoard
+   
+   Algorithm Idea:
+   - Match task.requiredSkills with member.skills array
+   - Prioritize members with matching skills
+   - Show warning icon for skill mismatches
+
+3. PTO/HOLIDAY CAPACITY ADJUSTMENTS
+   Status: Not implemented
+   Location: New fields needed in TeamRoster
+   Missing:
+   - [ ] Add 'ptoHours' or 'availableHours' field to Member type
+   - [ ] Add date range picker for PTO in TeamRoster
+   - [ ] Adjust dailyCapacity based on PTO days
+   - [ ] Show actual available capacity vs. gross capacity
+   - [ ] Risk scoring should account for reduced capacity
+   - [ ] Holiday calendar integration (optional)
+   
+   UI Changes:
+   - Add "PTO Days" input in TeamRoster
+   - Calculate: netCapacity = dailyCapacity - (ptoDays * 8)
+
+4. CAPACITY UTILIZATION VISUALIZATION
+   Status: Basic RiskMatrix exists, needs enhancement
+   Location: src/components/RiskMatrix.tsx
+   Missing:
+   - [ ] Show per-member capacity bars (assigned vs. available)
+   - [ ] Color-code: green (under capacity), yellow (at capacity), red (over capacity)
+   - [ ] Sprint velocity tracking
+   - [ ] Historical capacity trends chart
+   - [ ] Team-wide capacity summary
+   
+   Chart Library Options:
+   - Chart.js (lightweight)
+   - Recharts (React-native)
+   - Nivo (modern, animated)
+
+🟡 MEDIUM PRIORITY (Nice to Have)
+==================================
+
+5. PWA SUPPORT (Configured but Disabled)
+   Status: next-pwa was removed due to version conflicts
+   Missing:
+   - [ ] Re-add next-pwa with compatible version
+   - [ ] Create manifest.json with proper icons
+   - [ ] Generate icon-192.png and icon-512.png
+   - [ ] Test offline functionality
+   - [ ] Add service worker for caching
+   - [ ] Test install prompt on mobile
+
+6. TASK DEPENDENCIES & BLOCKERS
+   Status: Not implemented
+   Missing:
+   - [ ] Add 'blockedBy' field to task type
+   - [ ] Add 'dependencies' array to task type
+   - [ ] Visual indicator for blocked tasks
+   - [ ] Algorithm to sort by dependencies (topological sort)
+   - [ ] Warn if prerequisite task not assigned
+   - [ ] Drag-and-drop constraint for dependent tasks
+
+7. JIRA DIRECT INTEGRATION
+   Status: CSV import only
+   Missing:
+   - [ ] JIRA REST API authentication
+   - [ ] Fetch tasks directly from JIRA (no CSV needed)
+   - [ ] Two-way sync: push assignments back to JIRA
+   - [ ] Auto-import on sprint start
+   - [ ] Real-time sync option
+   
+   Libraries to Use:
+   - jira-client (npm)
+   - JIRA REST API v3
+
+8. ADVANCED ASSIGNMENT ALGORITHM
+   Status: Basic greedy algorithm implemented
+   Location: src/lib/assign.ts
+   Improvements Needed:
+   - [ ] Weighted scoring (skills + capacity + past velocity)
+   - [ ] Machine learning suggestions (task similarity)
+   - [ ] Load balancing across team (even distribution)
+   - [ ] Priority-based assignment (P0 first)
+   - [ ] Constraint satisfaction (max tasks per person)
+   - [ ] Multi-objective optimization
+   
+   Algorithm Enhancements:
+   - Hungarian algorithm for optimal matching
+   - Genetic algorithm for complex constraints
+   - A* search for dependency-aware assignment
+
+9. SPRINT HISTORY & ANALYTICS
+   Status: Not implemented
+   Missing:
+   - [ ] Store past sprint data in database
+   - [ ] Velocity trends over time
+   - [ ] Team member performance metrics
+   - [ ] Task completion rate analysis
+   - [ ] Estimate accuracy tracking
+   - [ ] Burndown chart generation
+   
+   Storage Options:
+   - PostgreSQL (Vercel Postgres)
+   - MongoDB (cloud)
+   - Supabase (backend as a service)
+
+10. MULTI-TEAM SUPPORT
+    Status: Single team only
+    Missing:
+    - [ ] Team selection dropdown
+    - [ ] Separate rosters per team
+    - [ ] Cross-team task assignment
+    - [ ] Team-specific capacity settings
+    - [ ] Manager access control
+
+🟢 LOW PRIORITY (Polish & UX)
+==============================
+
+11. IMPROVED UI/UX
+    - [ ] Better mobile responsiveness
+    - [ ] Dark mode toggle
+    - [ ] Custom themes
+    - [ ] Keyboard shortcuts for power users
+    - [ ] Undo/redo functionality
+    - [ ] Tooltips for all features
+    - [ ] Loading spinners for async operations
+    - [ ] Success/error toast notifications
+    - [ ] Inline task editing (double-click to edit)
+
+12. EXPORT OPTIONS
+    - [ ] PDF export with formatting
+    - [ ] JSON export for API integration
+    - [ ] HTML report generation
+    - [ ] Email sprint plan to team
+    - [ ] Print-friendly view
+
+13. SEARCH & FILTERING
+    - [ ] Search tasks by name/ID
+    - [ ] Filter by priority/status/assignee
+    - [ ] Sort tasks by estimate/risk
+    - [ ] Saved filter presets
+    - [ ] Advanced query builder
+
+14. ACCESSIBILITY (A11Y)
+    - [ ] ARIA labels for screen readers
+    - [ ] Keyboard navigation for drag-and-drop
+    - [ ] High contrast mode
+    - [ ] Font size adjustments
+    - [ ] Focus indicators
+
+15. PERFORMANCE OPTIMIZATION
+    - [ ] Virtualized lists for 100+ tasks
+    - [ ] Lazy loading for large CSVs
+    - [ ] Debounced auto-save
+    - [ ] Memoization for expensive calculations
+    - [ ] Code splitting by route
+
+🔵 TECHNICAL DEBT & REFACTORING
+================================
+
+16. TYPE SAFETY IMPROVEMENTS
+    Current: Using 'any' types in multiple places
+    - [ ] Define proper TypeScript interfaces for all data models
+    - [ ] Replace 'any' with specific types in components
+    - [ ] Add Zod or Yup for runtime validation
+    - [ ] Strict null checks enabled
+
+17. TEST COVERAGE
+    Current: Only assign.ts has tests
+    - [ ] Component tests for all UI components
+    - [ ] Integration tests for API routes
+    - [ ] E2E tests with Playwright/Cypress
+    - [ ] Test drag-and-drop interactions
+    - [ ] Test CSV import edge cases
+    - [ ] Test Google OAuth flow (mocked)
+
+18. ERROR HANDLING
+    - [ ] Global error boundary component
+    - [ ] API error response standardization
+    - [ ] User-friendly error messages
+    - [ ] Error logging service (Sentry)
+    - [ ] Retry logic for failed API calls
+
+19. CODE ORGANIZATION
+    - [ ] Move types to dedicated types/ directory
+    - [ ] Extract constants to constants.ts
+    - [ ] Create utils/ for shared helper functions
+    - [ ] Separate business logic from UI components
+    - [ ] Add JSDoc comments for complex functions
+
+20. SECURITY ENHANCEMENTS
+    - [ ] Input sanitization for CSV uploads
+    - [ ] CSRF protection for API routes
+    - [ ] Rate limiting for API endpoints
+    - [ ] OAuth token encryption in storage
+    - [ ] Content Security Policy headers
+
+===============================================
+IMPLEMENTATION PRIORITY SEQUENCE
+===============================================
+
+PHASE 1 - IMMEDIATE (Week 1-2)
+-------------------------------
+1. Fix Google Sheets integration with real credentials
+2. Add skill-based matching to assignment algorithm
+3. Implement PTO/capacity adjustments
+4. Improve capacity visualization
+
+PHASE 2 - SHORT TERM (Week 3-4)
+--------------------------------
+5. Add task dependencies/blockers
+6. Implement advanced assignment algorithm
+7. Add search & filtering
+8. Improve error handling
+
+PHASE 3 - MEDIUM TERM (Month 2)
+--------------------------------
+9. JIRA direct integration
+10. Sprint history & analytics
+11. Multi-team support
+12. Better UI/UX polish
+
+PHASE 4 - LONG TERM (Month 3+)
+-------------------------------
+13. PWA support with offline mode
+14. Machine learning assignment suggestions
+15. Advanced reporting & exports
+16. Full test coverage & E2E tests
+
+===============================================
+ESTIMATED EFFORT
+===============================================
+
+High Priority Items:    40-60 hours (1-2 weeks)
+Medium Priority Items:  80-120 hours (3-4 weeks)
+Low Priority Items:     40-60 hours (1-2 weeks)
+Technical Debt:         20-30 hours (1 week)
+
+TOTAL: ~200-300 hours (6-8 weeks for complete implementation)
+
+===============================================
+QUICK WINS (Can be done in <2 hours each)
+===============================================
+
+✨ EASY IMPROVEMENTS:
+- [ ] Add loading spinner to "Add Member" button
+- [ ] Add confirmation dialog before "Reset Assignments"
+- [ ] Show total task count in Backlog header
+- [ ] Add placeholder text when Backlog is empty
+- [ ] Show team member count in TeamRoster header
+- [ ] Add tooltips to risk score numbers
+- [ ] Add "Clear All" button to team roster
+- [ ] Show last import timestamp
+- [ ] Add keyboard shortcut (Ctrl+S) to download CSV
+- [ ] Add "Example CSV" download links
+
+===============================================
+RESOURCES NEEDED
+===============================================
+
+External Services:
+- Google Cloud Console account (for OAuth)
+- Optional: Database (PostgreSQL/MongoDB)
+- Optional: Error tracking (Sentry)
+- Optional: Analytics (Google Analytics)
+
+Development Tools:
+- VS Code with ESLint/Prettier
+- Chrome DevTools
+- React DevTools extension
+- Redux DevTools (if adding state management)
+
+Learning Required:
+- Google Sheets API documentation
+- OAuth 2.0 flow implementation
+- Advanced drag-and-drop patterns
+- Chart.js or Recharts
+- JIRA REST API (if implementing direct integration)
+
+===============================================
+CONTACT & CONTRIBUTION
+===============================================
+
+For questions about implementation:
+- Review project-spces.md for full requirements
+- Check TECH_STACK.txt for technology guidance
+- See README.md for debugging instructions
+
+To contribute:
+1. Pick a task from this TODO list
+2. Create a feature branch
+3. Implement with tests
+4. Submit pull request with documentation
+
+===============================================
+LAST UPDATED: November 22, 2025
+===============================================

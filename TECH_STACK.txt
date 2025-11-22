@@ -1,0 +1,329 @@
+===============================================
+SPRINT TASK DISTRIBUTOR - TECH STACK GUIDE
+===============================================
+
+PROJECT OVERVIEW
+----------------
+A full-stack web application for sprint capacity planning and task delegation,
+built with modern JavaScript/TypeScript ecosystem.
+
+CORE TECHNOLOGIES
+-----------------
+
+1. NEXT.JS 15.0.3 (React Framework)
+   - What: Full-stack React framework with server-side rendering (SSR) and API routes
+   - Why: Provides both frontend and backend in one project, optimized performance
+   - Learn: https://nextjs.org/docs
+   - Key Concepts:
+     * Pages Router (pages/ directory)
+     * API Routes (pages/api/)
+     * Client Components ('use client' directive)
+     * Static Site Generation (SSG)
+
+2. REACT 18.3.1 (UI Library)
+   - What: JavaScript library for building user interfaces with components
+   - Why: Industry standard for interactive UIs, component-based architecture
+   - Learn: https://react.dev
+   - Key Concepts:
+     * Functional Components
+     * Hooks (useState, useEffect, useCallback, useRef)
+     * Props and State Management
+     * Event Handling
+
+3. TYPESCRIPT 5.7.2 (Programming Language)
+   - What: Typed superset of JavaScript providing static type checking
+   - Why: Catches errors early, better IDE support, clearer code documentation
+   - Learn: https://www.typescriptlang.org/docs/
+   - Key Concepts:
+     * Type Annotations
+     * Interfaces and Types
+     * Generics
+     * Type Inference
+
+FRONTEND LIBRARIES
+------------------
+
+4. @DND-KIT (Drag and Drop)
+   - Packages: @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities
+   - What: Modern, accessible drag-and-drop toolkit for React
+   - Why: Enables intuitive task assignment via drag-and-drop
+   - Learn: https://docs.dndkit.com
+   - Used In: src/components/AssignmentBoard.tsx
+   - Key Concepts:
+     * DndContext (drag-and-drop provider)
+     * useSortable hook
+     * useDroppable hook
+     * Sensors and Collision Detection
+
+5. PAPAPARSE 5.4.1 (CSV Parser)
+   - What: Fast CSV parser for JavaScript
+   - Why: Handles CSV import/export for team rosters and task lists
+   - Learn: https://www.papaparse.com/docs
+   - Used In: src/components/UploadCSV.tsx, src/lib/csv.ts
+   - Key Concepts:
+     * Papa.parse() for reading CSV
+     * Papa.unparse() for writing CSV
+     * Stream parsing
+
+BACKEND & API
+-------------
+
+6. NEXT.JS API ROUTES
+   - What: Serverless API endpoints built into Next.js
+   - Where: pages/api/ directory
+   - Learn: https://nextjs.org/docs/pages/building-your-application/routing/api-routes
+   - Files:
+     * pages/api/upload.ts - CSV file upload handler
+     * pages/api/google/auth.ts - Google OAuth initiation
+     * pages/api/google/callback.ts - OAuth token exchange
+     * pages/api/google/push.ts - Push to Google Sheets
+
+7. GOOGLEAPIS 144.0.0 (Google Sheets API)
+   - What: Official Google APIs client library for Node.js
+   - Why: Enables pushing sprint plans to Google Sheets
+   - Learn: https://github.com/googleapis/google-api-nodejs-client
+   - Used In: pages/api/google/*.ts
+   - Key Concepts:
+     * OAuth2 authentication
+     * Google Sheets API v4
+     * Token management
+
+8. AXIOS 1.7.9 (HTTP Client)
+   - What: Promise-based HTTP client for browser and Node.js
+   - Why: Makes API calls easier with interceptors and better error handling
+   - Learn: https://axios-http.com/docs/intro
+   - Key Concepts:
+     * GET/POST requests
+     * Request/Response interceptors
+     * Error handling
+
+TESTING
+-------
+
+9. JEST 29.7.0 (Testing Framework)
+   - What: JavaScript testing framework with test runner and assertions
+   - Why: Ensures code reliability through unit tests
+   - Learn: https://jestjs.io/docs/getting-started
+   - Config: jest.config.js
+   - Tests: __tests__/assign.test.ts
+
+10. REACT TESTING LIBRARY 16.0.1
+    - What: Testing utilities for React components
+    - Why: Test components from user perspective
+    - Learn: https://testing-library.com/docs/react-testing-library/intro/
+    - Key Concepts:
+      * render() components
+      * Query elements (getByText, getByRole)
+      * Fire events (click, change)
+      * Async testing
+
+11. TS-JEST 29.2.5
+    - What: TypeScript preprocessor for Jest
+    - Why: Allows testing TypeScript files directly
+    - Learn: https://kulshekhar.github.io/ts-jest/
+
+CODE QUALITY
+------------
+
+12. ESLINT 9.15.0 (Code Linter)
+    - What: Static code analysis tool for JavaScript/TypeScript
+    - Why: Enforces code style and catches common errors
+    - Learn: https://eslint.org/docs/latest/
+    - Config: Uses eslint-config-next
+
+BROWSER APIs
+------------
+
+13. LOCALSTORAGE API (Browser Storage)
+    - What: Web Storage API for storing data in the browser
+    - Why: Persists team roster and assignments across sessions
+    - Learn: https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage
+    - Used In: src/hooks/useLocalStorage.ts
+    - Key Concepts:
+      * localStorage.setItem()
+      * localStorage.getItem()
+      * JSON serialization
+
+PROJECT STRUCTURE
+-----------------
+
+/pages                  - Next.js pages and API routes
+  /api                  - Backend API endpoints
+  index.tsx             - Main application page
+  _app.tsx              - App wrapper component
+
+/src
+  /components           - React UI components
+    AssignmentBoard.tsx - Drag-and-drop task assignment
+    TeamRoster.tsx      - Team member management
+    Backlog.tsx         - Task list editor
+    RiskMatrix.tsx      - Risk assessment display
+    UploadCSV.tsx       - CSV file import
+
+  /lib                  - Business logic utilities
+    assign.ts           - Assignment algorithm
+    csv.ts              - CSV parsing/export
+
+  /hooks                - Custom React hooks
+    useLocalStorage.ts  - LocalStorage persistence hook
+
+  /server               - Server-side utilities
+    tokenStore.ts       - OAuth token storage
+
+  /types                - TypeScript type definitions
+    index.d.ts          - Module declarations
+
+/styles
+  globals.css           - Global CSS styles
+
+/__tests__              - Unit tests
+  assign.test.ts        - Algorithm tests
+
+KEY CONCEPTS TO LEARN
+---------------------
+
+1. FUNDAMENTAL WEB TECHNOLOGIES
+   - HTML5, CSS3, JavaScript ES6+
+   - DOM manipulation
+   - Event handling
+   - Asynchronous JavaScript (Promises, async/await)
+
+2. REACT ECOSYSTEM
+   - Component lifecycle
+   - State management patterns
+   - React Hooks (useState, useEffect, useCallback, useRef, useMemo)
+   - Context API (used by dnd-kit)
+   - Controlled vs Uncontrolled components
+
+3. TYPESCRIPT
+   - Basic types (string, number, boolean, array, object)
+   - Type aliases and interfaces
+   - Generic types
+   - Type guards and assertions
+   - Function types
+
+4. NEXT.JS SPECIFICS
+   - File-based routing
+   - Server vs Client components
+   - API Routes
+   - Static vs Server-side rendering
+   - Image optimization
+
+5. NODE.JS BASICS
+   - NPM package management
+   - Module system (import/export)
+   - Environment variables (.env files)
+   - Serverless functions
+
+6. TOOLING
+   - Package managers (npm)
+   - Build tools (Webpack - used internally by Next.js)
+   - Transpilers (Babel, SWC)
+   - Module bundlers
+
+LEARNING PATH (RECOMMENDED ORDER)
+---------------------------------
+
+BEGINNER (Start Here):
+1. JavaScript fundamentals (variables, functions, arrays, objects)
+2. HTML & CSS basics
+3. React basics (components, props, state)
+4. TypeScript basics (types, interfaces)
+
+INTERMEDIATE:
+5. React Hooks (useState, useEffect)
+6. Next.js fundamentals (pages, routing)
+7. API development (REST, HTTP methods)
+8. Async JavaScript (Promises, fetch)
+
+ADVANCED:
+9. Advanced React patterns (custom hooks, context)
+10. Next.js advanced features (API routes, SSR/SSG)
+11. State management patterns
+12. OAuth2 authentication flow
+13. Testing (Jest, React Testing Library)
+14. Drag and drop implementations
+
+PROJECT-SPECIFIC ALGORITHMS
+---------------------------
+
+The core business logic is in src/lib/assign.ts:
+
+- calculateAssignments(): Greedy algorithm to distribute tasks
+- scoreRisk(): Calculates overload risk for team members
+- toEstimate(): Converts various formats to numeric estimates
+
+This uses:
+- Array manipulation (map, filter, reduce, sort)
+- Object destructuring
+- Functional programming patterns
+
+RESOURCES
+---------
+
+Official Documentation:
+- Next.js: https://nextjs.org/docs
+- React: https://react.dev
+- TypeScript: https://www.typescriptlang.org/docs/
+- dnd-kit: https://docs.dndkit.com
+
+Video Courses:
+- freeCodeCamp.org (YouTube) - Free full courses
+- Academind (Udemy) - Next.js & React courses
+- TypeScript Course by Net Ninja (YouTube)
+
+Interactive Learning:
+- https://react.dev/learn - Official React tutorial
+- https://www.typescriptlang.org/play - TypeScript Playground
+- https://nextjs.org/learn - Next.js interactive tutorial
+
+DEVELOPMENT WORKFLOW
+--------------------
+
+1. Install dependencies: npm install
+2. Run dev server: npm run dev
+3. Run tests: npm test
+4. Build for production: npm run build
+5. Run production build: npm start
+6. Lint code: npm run lint
+
+DEBUGGING
+---------
+
+- Browser DevTools (Chrome/Firefox)
+- VS Code debugger (see .vscode/launch.json)
+- React DevTools browser extension
+- Console.log() debugging
+- Network tab for API calls
+
+DEPLOYMENT
+----------
+
+Target Platform: Vercel (serverless)
+- Automatic builds from Git
+- Serverless API routes
+- Edge network CDN
+- Environment variables management
+
+ESTIMATED LEARNING TIME
+-----------------------
+
+For someone new to web development:
+- JavaScript basics: 4-6 weeks
+- React fundamentals: 3-4 weeks
+- TypeScript basics: 2-3 weeks
+- Next.js basics: 2-3 weeks
+- Project understanding: 1-2 weeks
+
+Total: ~3-4 months to be productive with this codebase
+
+For someone with JavaScript experience:
+- React + TypeScript: 2-3 weeks
+- Next.js: 1-2 weeks
+- Project understanding: 3-5 days
+
+Total: ~1 month to be fully productive
+
+===============================================
+HAPPY LEARNING! 🚀
+===============================================
