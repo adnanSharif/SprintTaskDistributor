@@ -1,0 +1,11 @@
+Issue key,Summary,Priority,Research Hours,Development Hours,Code Review Hours,Review Feedback Hours,Defect Correction Hours,QA Hours,Dependencies
+TASK-101,User Authentication API,Critical,4,16,2,4,8,6,
+TASK-102,Database Schema Migration,High,8,12,2,3,6,4,
+TASK-103,Dashboard UI Components,High,2,20,3,5,10,8,TASK-101
+TASK-104,Search Functionality,Medium,6,14,2,4,6,5,TASK-101;TASK-102
+TASK-105,User Profile Settings,Medium,2,10,2,3,5,4,TASK-101
+TASK-106,Email Notification Service,Low,4,8,1,2,4,3,
+TASK-107,Data Export Feature,Low,3,12,2,3,6,4,TASK-102
+TASK-108,Performance Optimization,Medium,8,16,2,4,8,6,TASK-101;TASK-102;TASK-103
+TASK-109,Unit Test Coverage,Low,0,12,1,2,3,2,TASK-101;TASK-102;TASK-103;TASK-104;TASK-105
+TASK-110,API Documentation,Low,2,8,1,1,2,0,TASK-101;TASK-102;TASK-106
